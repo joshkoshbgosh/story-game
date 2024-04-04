@@ -6,11 +6,14 @@
 #include <thread>
 #include <vector>
 #include <atomic>
+#include <mutex>
 
 constexpr int PORT = 8080;
 constexpr int BUFFER_SIZE = 1024;
 
 std::atomic<bool> has_input(false); // Flag to track if any client has entered input
+std::mutex input_mutex;
+
 
 void clientTask(int client_id) {
     int sock = 0, valread;
@@ -38,14 +41,26 @@ void clientTask(int client_id) {
 
     std::string input;
     while (true) {
+        std::lock_guard<std::mutex> lock(input_mutex);
         if (!has_input) {
-            std::cout << "Any client: Enter message: ";
+            std::cout << "Any client: Enter message (Enter 'QUIT' to leave'): ";
+            has_input=true;
         } else {
-            std::cout << "Client " << client_id << ": Enter message: ";
+            std::cout << "Client " << client_id << ": Enter message (Enter 'QUIT' to leave'): ";
         }
 
         std::getline(std::cin, input);
         has_input = true;
+
+        // Check if the user wants to quit
+        if (input == "QUIT") {
+            std::cout <<"Goodbye Player\n";
+            break; // Exit the loop
+            
+        }
+
+         // Add a space at the end of the input
+        input += " ";
 
         send(sock, input.c_str(), input.length(), 0);
         valread = read(sock, buffer, BUFFER_SIZE);
