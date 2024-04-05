@@ -29,13 +29,13 @@ void clientHandler(int client_socket) {
 
         send(client_socket, message.c_str(), message.length(), 0);
         memset(buffer, 0, BUFFER_SIZE);
+
     }
 
     close(client_socket);
 }
 
 int main() {
-    std::cout << "Server is running";
     int server_fd, new_socket;
     struct sockaddr_in address;
     int opt = 1;
@@ -65,6 +65,9 @@ int main() {
         perror("listen");
         exit(EXIT_FAILURE);
     }
+
+    //Lets user know the game is running
+    std::cout << "The Game is now running"<< std::endl;
 
     std::vector<std::thread> client_threads;
 
