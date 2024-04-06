@@ -7,6 +7,8 @@
 #include <vector>
 #include <atomic>
 #include <mutex>
+#include <sstream>
+
 
 constexpr int PORT = 8080;
 constexpr int BUFFER_SIZE = 1024;
@@ -42,21 +44,22 @@ void clientTask(int client_id) {
 
     std::string input;
     while (true) {
-        std::lock_guard<std::mutex> lock(input_mutex);
-        std::cout << period_count << std::endl;
-
-       
         std::cout << "Client " << client_id << ": Enter message (Enter 'QUIT' to leave'): ";
 
-        std::getline(std::cin, input);
-        has_input = true;
+        std::string input_line;
+        std::getline(std::cin, input_line);
+
+        {
+            std::lock_guard<std::mutex> lock(input_mutex);
+            std::istringstream iss(input_line);
+            std::getline(iss, input);
+        }
 
         if (input == "QUIT") {
-            std::cout <<"Goodbye Player\n";
+            std::cout << "Goodbye Player\n";
             close(sock);
             break;
         }
-
 
         for (char c : input) {
             if (c == '.') {
@@ -79,7 +82,6 @@ void clientTask(int client_id) {
 
     close(sock);
 }
-
 int main(int argc, char const *argv[]) {
     std::vector<std::thread> client_threads;
     int num_clients = 5;
