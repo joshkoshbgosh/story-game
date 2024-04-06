@@ -14,7 +14,7 @@ constexpr int BUFFER_SIZE = 1024;
 
 std::string message;
 std::mutex message_mutex;
-std::atomic<int> period_count(0); // Make period_count atomic
+std::atomic<int> period_count(1); // Make period_count atomic
 bool shutdown_requested = false;
 std::mutex shutdown_mutex;
 
