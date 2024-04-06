@@ -8,6 +8,9 @@
 #include <atomic>
 #include <mutex>
 #include <sstream>
+#include "socket.h"
+#include <socketserver.h>
+#include <thread.h>
 
 
 constexpr int PORT = 8080;
@@ -84,11 +87,8 @@ void clientTask(int client_id) {
 }
 int main(int argc, char const *argv[]) {
     std::vector<std::thread> client_threads;
-    int num_clients = 5;
 
-    for (int i = 0; i < num_clients; ++i) {
-        client_threads.emplace_back(clientTask, i + 1);
-    }
+    client_threads.emplace_back(clientTask, i + 1);
 
     for (auto& thread : client_threads) {
         thread.join();
