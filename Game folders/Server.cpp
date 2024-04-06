@@ -38,11 +38,12 @@ void clientHandler(int client_socket) {
         received_message = received_message.substr(0, received_message.find_last_not_of(" ") + 1);
 
         // Check if the received message is "SHUTDOWN"
-        if (received_message == "SHUTDOWN") {
+        if (received_message == "QUIT") {
             std::lock_guard<std::mutex> lock(shutdown_mutex);
             shutdown_requested = true;
             break;
         }
+
 
         // Count periods in the received buffer
         period_count += std::count(buffer, buffer + valread, '.');
