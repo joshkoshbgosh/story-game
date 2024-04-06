@@ -11,8 +11,9 @@
 constexpr int PORT = 8080;
 constexpr int BUFFER_SIZE = 1024;
 
-std::atomic<bool> has_input(false); // Flag to track if any client has entered input
+std::atomic<bool> has_input(false);
 std::mutex input_mutex;
+std::atomic<int> period_count(0);
 
 void clientTask(int client_id) {
     int sock = 0, valread;
@@ -27,16 +28,15 @@ void clientTask(int client_id) {
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(PORT);
 
-    // Convert IPv4 and IPv6 addresses from text to binary form
     if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0) {
         std::cerr << "\nInvalid address/ Address not supported for client " << client_id << std::endl;
-        close(sock); // Close the socket before exiting
+        close(sock);
         return;
     }
 
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
         std::cerr << "\nConnection Failed for client " << client_id << std::endl;
-        close(sock); // Close the socket before exiting
+        close(sock);
         return;
     }
 
@@ -49,37 +49,42 @@ void clientTask(int client_id) {
         std::getline(std::cin, input);
         has_input = true;
 
-        // Check if the user wants to quit
         if (input == "QUIT") {
             std::cout <<"Goodbye Player\n";
-            close(sock); // Close the socket before exiting
-            break; // Exit the function
+            close(sock);
+            break;
         }
 
-        // Add a space at the end of the input
-        input += " ";
+        for (char c : input) {
+            if (c == '.') {
+                period_count++;
+                if (period_count >= 7) {
+                    std::cout << "Client " << client_id << ": Requesting server shutdown..." << std::endl;
+                    send(sock, "SHUTDOWN", 8, 0);
+                    close(sock);
+                    return;
+                }
+            }
+        }
 
+        input += " ";
         send(sock, input.c_str(), input.length(), 0);
         valread = read(sock, buffer, BUFFER_SIZE);
         std::cout << "Client " << client_id << ": Server response: " << buffer << std::endl;
         memset(buffer, 0, BUFFER_SIZE);
     }
 
-    close(sock); // Close the socket before exiting
+    close(sock);
 }
 
 int main(int argc, char const *argv[]) {
     std::vector<std::thread> client_threads;
+    int num_clients = 5;
 
-    // Number of clients to run concurrently
-    int num_clients = 999;
-
-    // Create threads for each client
     for (int i = 0; i < num_clients; ++i) {
         client_threads.emplace_back(clientTask, i + 1);
     }
 
-    // Join threads
     for (auto& thread : client_threads) {
         thread.join();
     }
