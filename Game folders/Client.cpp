@@ -43,6 +43,8 @@ void clientTask(int client_id) {
     std::string input;
     while (true) {
         std::lock_guard<std::mutex> lock(input_mutex);
+        std::cout << period_count << std::endl;
+
        
         std::cout << "Client " << client_id << ": Enter message (Enter 'QUIT' to leave'): ";
 
@@ -54,6 +56,7 @@ void clientTask(int client_id) {
             close(sock);
             break;
         }
+
 
         for (char c : input) {
             if (c == '.') {
