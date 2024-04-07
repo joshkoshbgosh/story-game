@@ -7,6 +7,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
+#include "Blockable.h"
+
+namespace SocketModule {
 
 class ByteArray
 {
@@ -33,7 +36,7 @@ public:
     }
 };
 
-class Socket
+class Socket: public Sync::Blockable
 {
 private:
     sockaddr_in socketDescriptor;
@@ -43,6 +46,7 @@ public:
     Socket(std::string const & ipAddress, unsigned int port);
     Socket(int socketFD);
     Socket(Socket const & s);
+    Sync::Event terminator;
     Socket & operator=(Socket const & s);
     ~Socket(void);
 
@@ -51,5 +55,6 @@ public:
     int Read(ByteArray & buffer);
     void Close(void);
 };
-
+};
 #endif // SOCKET_H
+//

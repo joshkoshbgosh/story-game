@@ -1,0 +1,3 @@
+server should have a community string
+should take input from all users and put it together
+server should have a kill word function

@@ -21,8 +21,8 @@ std::atomic<int> period_count(1); // Make period_count atomic
 bool shutdown_requested = false;
 std::mutex shutdown_mutex;
 
-void clientHandler(Socket theSocket) {
-    ByteArray bytes;
+void clientHandler(SocketModule::Socket theSocket) {
+    SocketModule::ByteArray bytes;
     
     while (true) {
         int read = theSocket.Read(bytes);
@@ -66,7 +66,7 @@ int main() {
     while (true) {
         try
         {
-            Socket newSocket = theServer.Accept();
+            SocketModule::Socket newSocket = theServer.Accept();
             std::cout << "Received a socket connection!" << std::endl;
 
             client_threads.emplace_back(clientHandler, newSocket);

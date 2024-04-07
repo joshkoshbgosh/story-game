@@ -1,9 +1,9 @@
 #include "socketserver.h"
+#include "Blockable.h"
 #include <strings.h>
 #include <iostream>
 #include <errno.h>
 #include <algorithm>
-namespace Sync{
 	
 SocketServer::SocketServer(int port)
 {
@@ -23,7 +23,8 @@ SocketServer::SocketServer(int port)
 
     // Set up a maximum number of pending connections to accept
     listen(socketFD,5);
-    SetFD(socketFD);
+    /* SetFD(socketFD); */
+    this->socketFD = socketFD;
     // At this point, the object is initialized.  So return.
 }
 SocketServer::~SocketServer(void)
@@ -31,10 +32,12 @@ SocketServer::~SocketServer(void)
     Shutdown();
 }
 
-Socket SocketServer::Accept(void)
+SocketModule::Socket SocketServer::Accept(void)
 {
-    FlexWait waiter(2,this,&terminator);
-    Blockable * result = waiter.Wait();
+    SocketModule::Socket sock(socketFD);
+    Sync::Event terminator = sock.terminator;
+    Sync::FlexWait waiter(2,sock,&terminator);
+    Sync::Blockable * result = waiter.Wait();
 
     if (result == &terminator)
     {
@@ -42,14 +45,14 @@ Socket SocketServer::Accept(void)
         throw TerminationException(2);
     }
 
-    if (result == this)
+    if (result == &sock)
     {
-        int connectionFD = accept(GetFD(),NULL,0);
+        int connectionFD = accept(sock.GetFD(),NULL,0);
         if (connectionFD < 0)
         {
             throw std::string("Unexpected error in the server");
         }
-        return Socket(connectionFD);
+        return SocketModule::Socket(connectionFD);
     }
     else
         throw std::string("Unexpected error in the server");
@@ -57,9 +60,9 @@ Socket SocketServer::Accept(void)
 
 void SocketServer::Shutdown(void)
 {
-    close(GetFD());
-    shutdown(GetFD(),SHUT_RDWR);
-    terminator.Trigger();
+    SocketModule::Socket sock(this->socketFD);
+    close(this->socketFD);
+    shutdown(this->socketFD,SHUT_RDWR);
+    sock.terminator.Trigger();
 }
 
-};

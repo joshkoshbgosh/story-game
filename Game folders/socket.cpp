@@ -2,12 +2,12 @@
 #include <unistd.h>
 #include <iostream>
 #include <errno.h>
-
+#include "Blockable.h"
 #include "socket.h"
-namespace Sync{
+namespace SocketModule {
 	
 Socket::Socket(std::string const & ipAddress, unsigned int port)
-    : Blockable(),open(false)
+    : Sync::Blockable(),open(false)
 {
     // First, call socket() to get a socket file descriptor
     SetFD(socket(AF_INET, SOCK_STREAM, 0));
@@ -25,13 +25,13 @@ Socket::Socket(std::string const & ipAddress, unsigned int port)
 }
 
 Socket::Socket(int sFD)
-    : Blockable(sFD)
+    : Sync::Blockable(sFD)
 {
     open = true;
 }
 
 Socket::Socket(Socket const & s)
-    :Blockable(s)
+    :Sync::Blockable(s)
 {    
     open = s.open;
 }
@@ -82,8 +82,8 @@ int Socket::Read(ByteArray & buffer)
 
     buffer.v.clear();
     // Allow interruption of block.
-    FlexWait waiter(2,this,&terminator);
-    Blockable * result = waiter.Wait();
+    Sync::FlexWait waiter(2,this,&terminator);
+    Sync::Blockable * result = waiter.Wait();
     // This happens if the call was shutdown on this side
     if (result == &terminator)
     {
