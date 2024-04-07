@@ -9,8 +9,8 @@
 #include <mutex>
 #include <sstream>
 #include "socket.h"
-#include <socketserver.h>
-#include <thread.h>
+#include "socketserver.h"
+#include "thread.h"
 
 
 constexpr int PORT = 8080;

@@ -4,12 +4,13 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <vector>
-#include <mutex>
-#include <algorithm>
-#include <atomic> // Add atomic header
 #include "thread.h"
 #include "socketserver.h"
 #include "socket.h"
+#include <mutex>
+#include <algorithm>
+#include <atomic> 
+
 
 constexpr int PORT = 8080;
 constexpr int BUFFER_SIZE = 1024;

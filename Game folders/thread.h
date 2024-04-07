@@ -13,21 +13,22 @@ class Thread
 {
     friend void ThreadFunction(void * me);
 private:
-	std::thread theThread;
+    std::thread theThread;
     int exitTimeout;
 
 protected:
     Sync::Event terminationEvent;
 
-private:
-    Thread(Thread const &){}
-    Thread & operator=(Thread const &){}
 public:
     Thread(int exitTimeout = 1000);
     virtual ~Thread();
 
     // Override this function in your threads
     virtual long ThreadMain(void) = 0;
+
+private:
+    Thread(Thread const &) {}
+    Thread & operator=(Thread const &) { return *this; } // Add return statement
 };
 
 #endif // THREAD_H
