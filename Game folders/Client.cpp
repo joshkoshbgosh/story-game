@@ -3,8 +3,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <thread>
-#include <vector>
 #include <atomic>
 #include <mutex>
 #include <sstream>
@@ -69,14 +67,8 @@ void clientTask(int client_id) {
 }
 
 int main(int argc, char const *argv[]) {
-    std::vector<std::thread> client_threads;
-
     for (int i = 0; i < 5; ++i) {
-        client_threads.emplace_back(clientTask, i + 1);
-    }
-
-    for (auto& thread : client_threads) {
-        thread.join();
+        clientTask(i + 1);
     }
 
     return 0;

@@ -17,7 +17,6 @@ constexpr int BUFFER_SIZE = 1024;
 
 std::string message;
 std::mutex message_mutex;
-std::atomic<int> period_count(1); // Make period_count atomic
 bool shutdown_requested = false;
 std::mutex shutdown_mutex;
 
@@ -26,13 +25,13 @@ void clientHandler(SocketModule::Socket theSocket) {
     
     while (true) {
         int read = theSocket.Read(bytes);
-        std::cout << period_count << std::endl; //Period count stays 0. It needs to change
         if (read <= 0)
             break;
 
         {
             std::lock_guard<std::mutex> lock(message_mutex);
-            message += bytes.ToString();
+            // Append the new message to the existing message with a space in between
+            message += bytes.ToString() + " ";
         }
 
         // Trim trailing spaces from the received message
@@ -46,10 +45,13 @@ void clientHandler(SocketModule::Socket theSocket) {
             break;
         }
 
-        // Count periods in the received buffer
-        period_count += std::count(received_message.begin(), received_message.end(), '.');
 
-        theSocket.Write(bytes);
+        // Send the entire message back to the client
+        {
+            std::lock_guard<std::mutex> lock(message_mutex);
+            SocketModule::ByteArray response(message);
+            theSocket.Write(response);
+        }
     }
 
     theSocket.Close();
