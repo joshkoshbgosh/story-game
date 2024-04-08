@@ -7,11 +7,15 @@
 #include <mutex>
 #include <sstream>
 #include "socket.h"
+#include "Story.h"
+#include <optional>
 
 constexpr int PORT = 8080;
 constexpr int BUFFER_SIZE = 1024;
 
 std::mutex input_mutex;
+
+Story::Client::ClientState clientState;
 
 void clientTask(int client_id) {
     int sock = 0;
@@ -60,16 +64,67 @@ void clientTask(int client_id) {
         send(sock, input.c_str(), input.length(), 0);
         int valread = read(sock, buffer, BUFFER_SIZE);
         std::cout << "Client " << client_id << ": Server response: " << buffer << std::endl;
+        std::string response(buffer);
+        try {
+          json jsonResponse = json::parse(response);
+          std::cout << jsonResponse.dump(4) << std::endl;
+        } catch (...) {
+          std::cerr << "Error parsing json response from server" << std::endl;
+        }
         memset(buffer, 0, BUFFER_SIZE);
     }
 
     close(sock);
 }
 
+void dispatch(Story::Client::Action<Story::Client::ActionType> action) {
+  clientState = Story::Client::GetNextState(clientState, action); 
+}
+
+void createGame() {
+  /* Story::Client::Action setIsLoading() */
+  /* dispatch(Story::Client::Action) */
+
+}
+
+void joinGame() {
+
+}
+
 int main(int argc, char const *argv[]) {
-    for (int i = 0; i < 5; ++i) {
-        clientTask(i + 1);
+    std::string username;
+    std::string createOrJoin;
+    bool isCreateOrJoinSelected(false); 
+    std::cout << "Welcome to the story game! What was your name again?" << std::endl;
+    std::getline(std::cin, username);
+
+    while (!isCreateOrJoinSelected) {
+      std::cout << "Welcome " << username << "! Would you like to create or join a game? (c/j):" << std::endl;
+      std::getline(std::cin, createOrJoin);
+      
+      switch (createOrJoin) {
+        case "c":
+          createGame();
+          break;
+        case "j":
+          joinGame();
+          break;
+        default:
+          std::cout << "Invalid option" << std::endl;
+      }
     }
+     
+    
+    /* std::vector<std::thread> client_threads; */
+    /**/
+    /* for (int i = 0; i < 5; ++i) { */
+    /*     client_threads.emilace_back(clientTask, i + 1); */
+    /* } */
+    /**/
+    /* for (auto& thread : client_threads) { */
+    /*     thread.join(); */
+    /* } */
+    clientTask(1);
 
     return 0;
 }

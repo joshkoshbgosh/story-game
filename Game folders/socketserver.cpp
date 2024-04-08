@@ -51,12 +51,12 @@ SocketModule::Socket SocketServer::Accept(void)
         int connectionFD = accept(sock.GetFD(),NULL,0);
         if (connectionFD < 0)
         {
-            throw std::string("Unexpected error in the server");
+            throw std::string("Unexpected error in the server: failed to accept socket connection");
         }
         return SocketModule::Socket(connectionFD);
     }
     else
-        throw std::string("Unexpected error in the server");
+        throw std::string("Unexpected error in the server: wait result unexpected");
 }
 
 void SocketServer::Shutdown(void)

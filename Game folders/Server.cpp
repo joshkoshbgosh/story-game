@@ -10,7 +10,18 @@
 #include <mutex>
 #include <algorithm>
 #include <atomic> 
+#include "Story.h"
 
+std::vector<Story::Shared::User> gameUsers = {
+  {"user1_id"},
+  {"user2_id"}
+};
+
+Story::Shared::Game exampleGame = {
+  "game1_id",          // Game ID
+  Story::Shared::GameStatus::ACTIVE,  // Game Status
+  gameUsers            // Vector of Users
+};
 
 constexpr int PORT = 8080;
 constexpr int BUFFER_SIZE = 1024;
@@ -45,23 +56,23 @@ void clientHandler(SocketModule::Socket theSocket) {
             break;
         }
 
-
-        // Send the entire message back to the client
-        {
-            std::lock_guard<std::mutex> lock(message_mutex);
-            SocketModule::ByteArray response(message);
-            theSocket.Write(response);
-        }
+        // Count periods in the received buffer
+        /* period_count += std::count(received_message.begin(), received_message.end(), '.'); */
+        json j = exampleGame;
+        SocketModule::ByteArray ba(j.dump(-1,' ', true));
+        theSocket.Write(ba);
     }
 
     theSocket.Close();
 }
 
 int main() {
+    json j = exampleGame;
+    std::cout << j.dump(4) << std::endl;
+
     SocketServer theServer(PORT);
 
-    //Lets user know the game is running
-    std::cout << "The Game is now running"<< std::endl;
+    std::cout << "Server Started" << std::endl;
 
     std::vector<std::thread> client_threads;
 
@@ -85,7 +96,7 @@ int main() {
         }
         catch(...)
         {
-            std::cout << "caught  unknown exception" << std::endl;
+            std::cout << "caught unknown exception" << std::endl;
             break;
         }
 
