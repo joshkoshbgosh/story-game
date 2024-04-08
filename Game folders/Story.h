@@ -100,6 +100,11 @@ namespace Story {
     };
 
     template<ActionType> struct ActionPayloadMap;
+
+    template<ActionType T>
+    struct Action {
+        typename ActionPayloadMap<T>::type payload;
+    };
     // use this as the payload type for actions that don't need a payload 
     struct NoPayload {};
 
@@ -113,14 +118,14 @@ namespace Story {
     struct ActionPayloadMap<ActionType::SET_USERNAME> {
         using type = SetUsernamePayload;
     };
-    ClientState handleAction<ActionType::SET_USERNAME>(ClientState currentState, const Action<ActionType::SET_USERNAME>& action);
+    ClientState handleAction(ClientState currentState, const Action<ActionType::SET_USERNAME>& action);
 
     // SET_CREATE_GAME_LOADING
     template<>
     struct ActionPayloadMap<ActionType::SET_CREATE_GAME_LOADING> {
         using type = NoPayload;
     };
-    ClientState handleAction<ActionType::SET_CREATE_GAME_LOADING>(ClientState currentState, const Action<ActionType::SET_CREATE_GAME_LOADING>& action);
+    ClientState handleAction(ClientState currentState, const Action<ActionType::SET_CREATE_GAME_LOADING>& action);
 
     // SET_CREATE_GAME_ERROR
     struct SetCreateGameErrorPayload {
@@ -130,7 +135,7 @@ namespace Story {
     struct ActionPayloadMap<ActionType::SET_CREATE_GAME_ERROR> {
         using type = SetCreateGameErrorPayload;
     };
-    ClientState handleAction<ActionType::SET_CREATE_GAME_ERROR>(ClientState currentState, const Action<ActionType::SET_CREATE_GAME_ERROR>& action);
+    ClientState handleAction(ClientState currentState, const Action<ActionType::SET_CREATE_GAME_ERROR>& action);
 
     // SET_CREATE_GAME_COMPLETE
     struct SetCreateGameCompletePayload {
@@ -140,14 +145,14 @@ namespace Story {
     struct ActionPayloadMap<ActionType::SET_CREATE_GAME_COMPLETE> {
         using type = SetCreateGameCompletePayload;
     };
-    ClientState handleAction<ActionType::SET_CREATE_GAME_COMPLETE>(ClientState currentState, const Action<ActionType::SET_CREATE_GAME_COMPLETE>& action);
+    ClientState handleAction(ClientState currentState, const Action<ActionType::SET_CREATE_GAME_COMPLETE>& action);
 
     // SET_JOIN_GAME_LOADING
     template<>
     struct ActionPayloadMap<ActionType::SET_JOIN_GAME_LOADING> {
         using type = NoPayload;
     };
-    ClientState handleAction<ActionType::SET_JOIN_GAME_LOADING>(ClientState currentState, const Action<ActionType::SET_JOIN_GAME_LOADING>& action);
+    ClientState handleAction(ClientState currentState, const Action<ActionType::SET_JOIN_GAME_LOADING>& action);
 
     // SET_JOIN_GAME_ERROR
     struct SetJoinGameErrorPayload {
@@ -157,7 +162,7 @@ namespace Story {
     struct ActionPayloadMap<ActionType::SET_JOIN_GAME_ERROR> {
         using type = SetJoinGameErrorPayload;
     };
-    ClientState handleAction<ActionType::SET_JOIN_GAME_ERROR>(ClientState currentState, const Action<ActionType::SET_JOIN_GAME_ERROR>& action);
+    ClientState handleAction(ClientState currentState, const Action<ActionType::SET_JOIN_GAME_ERROR>& action);
 
     // SET_JOIN_GAME_COMPLETE
     struct SetJoinGameCompletePayload {
@@ -167,13 +172,9 @@ namespace Story {
     struct ActionPayloadMap<ActionType::SET_JOIN_GAME_COMPLETE> {
         using type = SetCreateGameCompletePayload;
     };
-    ClientState handleAction<ActionType::SET_JOIN_GAME_COMPLETE>(ClientState currentState, const Action<ActionType::SET_JOIN_GAME_COMPLETE>& action);
+    ClientState handleAction(ClientState currentState, const Action<ActionType::SET_JOIN_GAME_COMPLETE>& action);
 
 
-    template<ActionType T>
-    struct Action {
-        typename ActionPayloadMap<T>::type payload;
-    };
     
     //ignore, only need to handle serialization of messages between client and server
     /* NLOHMANN_JSON_SERIALIZE_ENUM(ActionType, { */

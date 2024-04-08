@@ -77,8 +77,9 @@ void clientTask(int client_id) {
     close(sock);
 }
 
-void dispatch(Story::Client::Action<Story::Client::ActionType> action) {
-  clientState = Story::Client::GetNextState(clientState, action); 
+template<Story::Client::ActionType T>
+void dispatch(Story::Client::Action<T> action) {
+  clientState = Story::Client::handleAction(clientState, action); 
 }
 
 void createGame() {
@@ -102,15 +103,12 @@ int main(int argc, char const *argv[]) {
       std::cout << "Welcome " << username << "! Would you like to create or join a game? (c/j):" << std::endl;
       std::getline(std::cin, createOrJoin);
       
-      switch (createOrJoin) {
-        case "c":
-          createGame();
-          break;
-        case "j":
-          joinGame();
-          break;
-        default:
-          std::cout << "Invalid option" << std::endl;
+      if (createOrJoin == "c") {
+        createGame();
+      } else if (createOrJoin == "j") {
+        joinGame();
+      } else {
+        std::cout << "Invalid option" << std::endl;
       }
     }
      
