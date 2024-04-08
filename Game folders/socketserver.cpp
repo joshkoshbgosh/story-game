@@ -34,9 +34,10 @@ SocketServer::~SocketServer(void)
 
 SocketModule::Socket SocketServer::Accept(void)
 {
+    std::cout << "SockerServer Accept. socketFD = " << socketFD << std::endl;
     SocketModule::Socket sock(socketFD);
     Sync::Event terminator = sock.terminator;
-    Sync::FlexWait waiter(2,sock,&terminator);
+    Sync::FlexWait waiter(2,&sock,&terminator);
     Sync::Blockable * result = waiter.Wait();
 
     if (result == &terminator)

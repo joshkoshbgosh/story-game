@@ -25,7 +25,7 @@ Socket::Socket(std::string const & ipAddress, unsigned int port)
 }
 
 Socket::Socket(int sFD)
-    : Sync::Blockable(sFD)
+    : Sync::Blockable(sFD), terminator()
 {
     open = true;
 }

@@ -3,6 +3,8 @@
 #include "errno.h"
 #include <iostream>
 #include "stdio.h"
+#include <cerrno>
+#include <cstring>
 
 namespace Sync{
 	
@@ -173,11 +175,29 @@ Blockable * FlexWait::Wait(int timeout)
     int maxFDArg = maxFD+1;
     //ShowParams(v,maxFDArg);
     int selectionFD = select(maxFDArg, &theSet, NULL, NULL, pTimeout);
-
+    
     if (selectionFD < 0)
     {
         perror("select");
         ShowParams(v,maxFDArg);
+        switch (errno) {
+            case EBADF:
+                // One of the file descriptor sets specified an invalid file descriptor.
+                printf("Error: EBADF - Invalid file descriptor.\n");
+                break;
+            case EINTR:
+                // A signal was caught; you can either retry or handle the interrupt.
+                printf("Error: EINTR - Interrupted by signal.\n");
+                break;
+            case EINVAL:
+                // The specified time limit is invalid. One of its components is negative or too large.
+                printf("Error: EINVAL - Invalid timeout value.\n");
+                break;
+            default:
+                // Other unexpected errors.
+                printf("Error: %s\n", strerror(errno));
+                break;
+        }
         throw std::string("Unexpected error in synchronization object");
     }
 
