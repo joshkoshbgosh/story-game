@@ -9,19 +9,14 @@
 #include <mutex>
 #include <sstream>
 #include "socket.h"
-#include "socketserver.h"
-#include "thread.h"
-
 
 constexpr int PORT = 8080;
 constexpr int BUFFER_SIZE = 1024;
 
-std::atomic<bool> has_input(false);
 std::mutex input_mutex;
-std::atomic<int> period_count(0);
 
 void clientTask(int client_id) {
-    int sock = 0, valread;
+    int sock = 0;
     struct sockaddr_in serv_addr;
     char buffer[BUFFER_SIZE] = {0};
 
@@ -54,8 +49,7 @@ void clientTask(int client_id) {
 
         {
             std::lock_guard<std::mutex> lock(input_mutex);
-            std::istringstream iss(input_line);
-            std::getline(iss, input);
+            input = input_line;
         }
 
         if (input == "QUIT") {
@@ -64,31 +58,22 @@ void clientTask(int client_id) {
             break;
         }
 
-        for (char c : input) {
-            if (c == '.') {
-                period_count++;
-                if (period_count >= 7) {
-                    std::cout << "Client " << client_id << ": Requesting server shutdown..." << std::endl;
-                    send(sock, "SHUTDOWN", 8, 0);
-                    close(sock);
-                    return;
-                }
-            }
-        }
-
         input += " ";
         send(sock, input.c_str(), input.length(), 0);
-        valread = read(sock, buffer, BUFFER_SIZE);
+        int valread = read(sock, buffer, BUFFER_SIZE);
         std::cout << "Client " << client_id << ": Server response: " << buffer << std::endl;
         memset(buffer, 0, BUFFER_SIZE);
     }
 
     close(sock);
 }
+
 int main(int argc, char const *argv[]) {
     std::vector<std::thread> client_threads;
 
-    client_threads.emplace_back(clientTask, i + 1);
+    for (int i = 0; i < 5; ++i) {
+        client_threads.emplace_back(clientTask, i + 1);
+    }
 
     for (auto& thread : client_threads) {
         thread.join();
