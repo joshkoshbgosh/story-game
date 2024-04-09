@@ -43,6 +43,7 @@ namespace Story {
 
     // any request the client makes will have mostly shared state, use RequestState to reduce duplication
     enum class RequestStatus {
+      NOT_STARTED,
       LOADING,
       ERROR,
       SUCCESS,
@@ -50,7 +51,7 @@ namespace Story {
 
     template<typename RequestBodyType, typename ResponseDataType, typename ErrorType>
     struct RequestState {
-      RequestStatus status;
+      RequestStatus status = RequestStatus::NOT_STARTED;
       std::optional<RequestBodyType> body;
       std::optional<ResponseDataType> response;
       std::optional<ErrorType> error;
@@ -118,14 +119,22 @@ namespace Story {
     struct ActionPayloadMap<ActionType::SET_USERNAME> {
         using type = SetUsernamePayload;
     };
-    ClientState handleAction(ClientState currentState, const Action<ActionType::SET_USERNAME>& action);
+    ClientState handleAction(ClientState currentState, const Action<ActionType::SET_USERNAME>& action) {
+      currentState.username = action.payload.username;
+      return currentState;
+    }
 
     // SET_CREATE_GAME_LOADING
     template<>
     struct ActionPayloadMap<ActionType::SET_CREATE_GAME_LOADING> {
         using type = NoPayload;
     };
-    ClientState handleAction(ClientState currentState, const Action<ActionType::SET_CREATE_GAME_LOADING>& action);
+    ClientState handleAction(ClientState currentState, const Action<ActionType::SET_CREATE_GAME_LOADING>& action) {
+      currentState.createGameRequestState = {
+      
+      };
+      return currentState;
+    }
 
     // SET_CREATE_GAME_ERROR
     struct SetCreateGameErrorPayload {

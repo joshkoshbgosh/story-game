@@ -85,11 +85,13 @@ void dispatch(Story::Client::Action<T> action) {
 void createGame() {
   /* Story::Client::Action setIsLoading() */
   /* dispatch(Story::Client::Action) */
-
+  Story::Shared::Game game;
+  Story::Client::Action<Story::Client::ActionType::SET_CREATE_GAME_COMPLETE> createGameCompleteAction{game};
+  /* clientState = Story::Client::handleAction(clientState, action); */
 }
 
 void joinGame() {
-
+  
 }
 
 int main(int argc, char const *argv[]) {
