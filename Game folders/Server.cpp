@@ -41,8 +41,7 @@ void clientHandler(SocketModule::Socket theSocket) {
 
         {
             std::lock_guard<std::mutex> lock(message_mutex);
-            // Append the new message to the existing message with a space in between
-            message += bytes.ToString() + " ";
+            message += bytes.ToString();
         }
 
         // Trim trailing spaces from the received message

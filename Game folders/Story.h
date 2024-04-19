@@ -119,7 +119,7 @@ namespace Story {
     struct ActionPayloadMap<ActionType::SET_USERNAME> {
         using type = SetUsernamePayload;
     };
-    ClientState handleAction(ClientState currentState, const Action<ActionType::SET_USERNAME>& action) {
+    ClientState handleAction(ClientState currentState, const Action<ActionType::SET_USERNAME> action) {
       currentState.username = action.payload.username;
       return currentState;
     }
@@ -131,7 +131,7 @@ namespace Story {
     };
     ClientState handleAction(ClientState currentState, const Action<ActionType::SET_CREATE_GAME_LOADING>& action) {
       currentState.createGameRequestState = {
-      
+        Story::Shared::RequestStatus::LOADING 
       };
       return currentState;
     }

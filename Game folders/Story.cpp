@@ -27,7 +27,8 @@ namespace Story {
     /* struct ActionPayloadMap<ActionType::SET_USERNAME> { */
     /*     using type = SetMyUsernamePayload; */
     /* }; */
-    /* ClientState handleAction(ClientState currentState, Action<ActionType::SET_USERNAME> action) { */
+    /* ClientState handleAction(ClientState currentState, const Action<ActionType::SET_USERNAME> action) { */
+    /*   currentState.username = action.payload.username; */
     /*   return currentState; */
     /* } */
 
