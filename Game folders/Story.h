@@ -129,7 +129,7 @@ namespace Story {
     struct ActionPayloadMap<ActionType::SET_CREATE_GAME_LOADING> {
         using type = NoPayload;
     };
-    ClientState handleAction(ClientState currentState, const Action<ActionType::SET_CREATE_GAME_LOADING>& action) {
+    ClientState handleAction(ClientState currentState, const Action<ActionType::SET_CREATE_GAME_LOADING> action) {
       currentState.createGameRequestState = {
         Story::Shared::RequestStatus::LOADING 
       };
