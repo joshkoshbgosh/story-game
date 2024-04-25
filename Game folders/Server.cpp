@@ -26,44 +26,102 @@ Story::Shared::Game exampleGame = {
 constexpr int PORT = 8080;
 constexpr int BUFFER_SIZE = 1024;
 
-std::string message;
-std::mutex message_mutex;
 bool shutdown_requested = false;
 std::mutex shutdown_mutex;
 
-void clientHandler(SocketModule::Socket theSocket) {
-    SocketModule::ByteArray bytes;
-    
-    while (true) {
-        int read = theSocket.Read(bytes);
+
+class GameThread : public Thread {
+  private:
+    SocketModule::Socket gameSocket;
+
+  public:
+    GameThread(SocketModule::Socket const & socket) : Thread(true),gameSocket(socket) {}
+    ~GameThread() override {
+      std::cout << "GameThread destructor" << std::endl;
+    }
+
+    long ThreadMain() override {
+        std::cout << "Game Thread started!" << std::endl;
+        bool running(true);
+        bool initialGameSent(false);
+
+        while (running) {
+          if (!initialGameSent) {
+            json j = exampleGame;
+            SocketModule::ByteArray ba(j.dump(-1,' ', true));
+            gameSocket.Write(ba);
+            initialGameSent = true;
+          }
+        } 
+        // Game logic here
+        // For example, handle game communication using the gameSocket
+
+        // After game logic is done, close the socket
+        gameSocket.Close();
+
+        return 0;
+    }
+};
+
+std::vector<GameThread *> gameThreads = {};
+
+class ClientThread : public Thread {
+  private:
+    SocketModule::Socket clientSocket;
+
+  public:
+    ClientThread(SocketModule::Socket const & socket) : Thread(true),clientSocket(socket) {}
+    ~ClientThread() override {
+      std::cout << "ClientThread destructor" << std::endl;
+    }
+    long ThreadMain() override {
+      std::cout << "New client handler thread started" << std::endl;
+      SocketModule::ByteArray bytes;
+      std::string message("");
+      bool running(true);
+      
+      while (running) {
+        int read = clientSocket.Read(bytes);
         if (read <= 0)
             break;
 
         {
-            std::lock_guard<std::mutex> lock(message_mutex);
+            /* std::lock_guard<std::mutex> lock(message_mutex); */
             message += bytes.ToString();
         }
 
         // Trim trailing spaces from the received message
         std::string received_message = bytes.ToString();
         received_message = received_message.substr(0, received_message.find_last_not_of(" ") + 1);
+        std::cout << "We have received this message: " << received_message << std::endl;
 
         // Check if the received message is "QUIT"
-        if (received_message == "QUIT") {
-            std::lock_guard<std::mutex> lock(shutdown_mutex);
-            shutdown_requested = true;
-            break;
+        /* if (received_message == "QUIT") { */
+        /*     std::lock_guard<std::mutex> lock(shutdown_mutex); */
+        /*     shutdown_requested = true; */
+        /*     break; */
+        /* } */
+
+        if(received_message == "c"){
+            std::cout << "Received create game" << std::endl;
+            gameThreads.emplace_back(new GameThread(clientSocket));
+            /* running = false; */
         }
 
-        // Count periods in the received buffer
-        /* period_count += std::count(received_message.begin(), received_message.end(), '.'); */
-        json j = exampleGame;
-        SocketModule::ByteArray ba(j.dump(-1,' ', true));
-        theSocket.Write(ba);
+        /*
+            if received message starts with 'j:'
+            extract the game_id after ':'
+            do a lookup against the existing games
+            (recommendation: have a global variable that is a vector of shared pointers to game objects)
+            server write back to client
+        */
+      }
+      std::cout << "Client handler thread complete" << std::endl;       
+      return 0;
     }
+};
 
-    theSocket.Close();
-}
+std::vector<ClientThread *> clientThreads = {};
 
 int main() {
     json j = exampleGame;
@@ -73,7 +131,6 @@ int main() {
 
     std::cout << "Server Started" << std::endl;
 
-    std::vector<std::thread> client_threads;
 
     while (true) {
         try
@@ -81,7 +138,7 @@ int main() {
             SocketModule::Socket newSocket = theServer.Accept();
             std::cout << "Received a socket connection!" << std::endl;
 
-            client_threads.emplace_back(clientHandler, newSocket);
+            clientThreads.emplace_back(new ClientThread(newSocket));
         }
         catch(TerminationException e)
         {
@@ -110,8 +167,11 @@ int main() {
     }
 
     // Wait for client threads to finish
-    for (auto& thread : client_threads) {
-        thread.join();
+    for (auto& thread : clientThreads) {
+      delete thread;
+    }
+    for (auto& thread : gameThreads) {
+      delete thread;
     }
 
     return 0;
