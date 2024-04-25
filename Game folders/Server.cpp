@@ -23,6 +23,11 @@ Story::Shared::Game exampleGame = {
   gameUsers            // Vector of Users
 };
 
+//Game vector
+std::vector<std::shared_ptr<Story::Shared::Game>> gameVector = {}; 
+
+
+
 constexpr int PORT = 8080;
 constexpr int BUFFER_SIZE = 1024;
 
@@ -93,7 +98,8 @@ class ClientThread : public Thread {
         // Trim trailing spaces from the received message
         std::string received_message = bytes.ToString();
         received_message = received_message.substr(0, received_message.find_last_not_of(" ") + 1);
-        std::cout << "We have received this message: " << received_message << std::endl;
+        std::string name = received_message.substr(1,4);
+        std::cout << "We have received this message: " << name << std::endl;
 
         // Check if the received message is "QUIT"
         /* if (received_message == "QUIT") { */
@@ -102,19 +108,57 @@ class ClientThread : public Thread {
         /*     break; */
         /* } */
 
-        if(received_message == "c"){
-            std::cout << "Received create game" << std::endl;
-            gameThreads.emplace_back(new GameThread(clientSocket));
+        //If user creates a new message
+        if(received_message.length() >= 5 && received_message.substr(0,1) == "c"){
+            std::string username = received_message.substr(1,4);
+            std::cout << "Received create game from "<< username << std::endl;
+            //gameThreads.emplace_back(new GameThread(clientSocket));
             /* running = false; */
+
+            Story::Shared::Game newGame = {
+            "game1_id",          // Game ID
+            Story::Shared::GameStatus::PENDING,  // Game Status
+            {{username}}            // Vector of Users
+            };
+
+            // Add the new game to the game vector
+            gameVector.push_back(std::make_shared<Story::Shared::Game>(newGame));
         }
 
-        /*
-            if received message starts with 'j:'
-            extract the game_id after ':'
-            do a lookup against the existing games
-            (recommendation: have a global variable that is a vector of shared pointers to game objects)
-            server write back to client
-        */
+        //If user decides to join an existing game
+        if (received_message.length() >= 7 && received_message.substr(0, 2) == "j:"){
+            std::cout << "Received Join Game " << std::endl;
+            std::string game_id = received_message.substr(6);
+            std::string username = received_message.substr(2,5);
+            std::cout << username << "is joining game ID:" << game_id << std::endl;
+
+            //Search the games vector for the existing game
+            auto it = std::find_if(gameVector.begin(), gameVector.end(), [&game_id](const std::shared_ptr <Story::Shared::Game>& game) {
+            return game->id == game_id;
+            });
+
+            // Check if the game was found
+            if (it != gameVector.end()) {
+            // Add the username to the user vector in the game
+            (*it)->users.push_back({received_message.substr(6)});
+            std::cout << received_message.substr(6) << " is joining game ID: " << game_id << std::endl;
+            } else {
+              std::cout << "Error: Game with ID " << game_id << " not found!" << std::endl;
+            }
+
+
+            /*
+            should receive message that includes game id
+            And look up and see if any of the game objects have a matching game id
+            send error message if no game exist
+            if game exists, you should pass the client socket to the game thread
+            Then game thread should update the state and broadcast the new gamestate to users
+            Alternative to socket to thread is to create game thread when all users have entered the game
+            map game_id to sockets for each user and start game when all users are ready
+            */
+          }
+            
+  
       }
       std::cout << "Client handler thread complete" << std::endl;       
       return 0;
