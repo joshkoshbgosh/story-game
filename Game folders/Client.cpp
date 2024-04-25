@@ -89,9 +89,10 @@ sends a socket message to the server,
 waits for response, 
 should receive a json string representing the game it should parse the string and store the created game in a global variable
 */ 
-void createGame() {
+void createGame(std::string username) {
   std::cout << "Creating game..." << std::endl;
-  std::string message = "c";
+  std::string userCut = username.substr(0,4);
+  std::string message = "c"+userCut;
   send(sock, message.c_str(), message.length(), 0);
   std::cout << "Sent create game socket message" << std::endl;
 
@@ -115,7 +116,24 @@ if match found, server should connect the client socket to that game thread
 if match not found, server should return error
 and client should display that error
 */
-void joinGame(std::string game_id) {
+void joinGame(std::string game_id,  std::string username) {
+
+  std::cout<< username << " is joining game: " << game_id << std::endl;
+  std::string userCut = username.substr(0,4);
+  std::string message = "j:"+userCut+" "+game_id;
+  send(sock, message.c_str(), message.length(), 0);
+  std::cout << "Sent join game socket message" << std::endl;
+
+  int valread = read(sock, buffer, BUFFER_SIZE);
+  std::cout << "Server response: " << buffer << std::endl;
+  std::string response(buffer);
+  try {
+    json jsonResponse = json::parse(response);
+    std::cout << jsonResponse.dump(4) << std::endl;
+  } catch (...) {
+    std::cerr << "Error parsing json response from server" << std::endl;
+  }
+  memset(buffer, 0, BUFFER_SIZE);
 
 }
 
@@ -152,12 +170,12 @@ int main(int argc, char const *argv[]) {
       
       if (createOrJoin == "c") {
         isCreateOrJoinSelected = true;
-        createGame();
+        createGame(username);
       } else if (createOrJoin == "j") {
         std::string game_id;
         std::cout << "Enter Game ID: " << std::endl;
         getline(std::cin, game_id);
-        joinGame(game_id);
+        joinGame(game_id, username);
       } else {
         std::cout << "Invalid option" << std::endl;
       }
